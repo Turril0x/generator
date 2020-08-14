@@ -36,6 +36,19 @@
 #define airMotorOpen A3 //Air intake open relay.
 
 //States
+#define INIT 0
+#define CHECK 1
+#define IDLE 2
+#define IGNITE 3
+#define WORKING 4
+#define STOP 5
+
+//Error states
+#define stdError -1
+#define gasError -2
+#define oilError -3
+#define igniteError -4
+#define indetError -5
 
 void setup() {
 	pinMode(gasWarning, INPUT);
@@ -55,6 +68,7 @@ void setup() {
 	pinMode(gasEmptyLED, OUTPUT);
 	pinMode(airMotorClose, OUTPUT);
 	pinMode(airMotorOpen, OUTPUT);
+  int currState = 0; //Stores current state.
 } 
 
 
