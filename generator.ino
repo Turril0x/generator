@@ -72,6 +72,19 @@ void setup() {
 
 
 void loop() {
-  // put your main code here, to run repeatedly:
   
+}
+
+void closeAir() {
+  while (digitalRead(airClosed) == LOW) {
+    digitalWrite(airMotorClose, HIGH);
+  }
+  digitalWrite(airMotorClose, LOW);
+}
+
+void openAir(){
+  while (digitalRead(airOpened) == LOW) {
+    digitalWrite(airMotorOpen, HIGH);
+  }
+  digitalWrite(airMotorOpen, LOW);
 }
