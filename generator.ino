@@ -1,5 +1,5 @@
 /*
- * Generador
+ * Generator
  * 
  * by Turril0x
  * 
@@ -12,7 +12,6 @@
 //Pin definitions.
 
 //Inputs
-#define gasWarning 0 //Gasoline warning level sensor.
 #define gasEmpty 1 //Gasoline empty level sensor.
 #define oilLevel 2 //Oil level warning sensor.
 #define voltDetector 3 //Voltage detector.
@@ -51,7 +50,6 @@
 #define indetError -5
 
 void setup() {
-	pinMode(gasWarning, INPUT);
 	pinMode(gasEmpty, INPUT);
 	pinMode(oilLevel, INPUT);
 	pinMode(voltDetector, INPUT);
@@ -69,6 +67,7 @@ void setup() {
 	pinMode(airMotorClose, OUTPUT);
 	pinMode(airMotorOpen, OUTPUT);
   int currState = 0; //Stores current state.
+  openAir();
 } 
 
 
