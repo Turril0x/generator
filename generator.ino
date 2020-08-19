@@ -1,4 +1,4 @@
-/*
+  /*
  * Generator
  * 
  * by Turril0x
@@ -68,11 +68,16 @@ void setup() {
 	pinMode(airMotorOpen, OUTPUT);
   int currState = 0; //Stores current state.
   openAir();
+  closeAir();
 } 
 
 
 void loop() {
-  
+  switch (currState) {
+    case 1:
+
+    case 2:
+  }
 }
 
 void closeAir() {
@@ -84,7 +89,7 @@ void closeAir() {
 
 void openAir(){
   while (digitalRead(airOpened) == LOW) {
-    digitalWrite(airMotorOpen, HIGH);
+    digitalWrite(A3, HIGH);
   }
   digitalWrite(airMotorOpen, LOW);
 }
