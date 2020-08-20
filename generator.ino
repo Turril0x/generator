@@ -28,6 +28,8 @@
 #define contact 9 //Contact Relay.
 #define startEngine 10 //Stert engine relay.
 #define errorLED 13 //Error light.
+#define outputErrorLED 0
+#define startErrorLED 12
 #define gasEmptyLED 11 //Gasoline empty level light.
 #define oilLevelLED A1 //Oil level warning light.
 #define airErrorLED A2
@@ -40,16 +42,18 @@ int currState;
 //#define INIT 0
 //#define CHECK 1
 #define IDLE 2
-#define IGNITE 3
+#define START 3
 #define WORKING 4
-#define STOP 5
-#define ERROR -1
-bool errorFlag = false;
+//#define STOP 5
+//#define ERROR -1
 bool airError = false;
+bool outputError = false;
+bool startError = false;
 
 #define airTimeout 5000
-#define igniteAtempts 5
+#define igniteAttempts 5
 #define currentCheckWait 10000
+#define airTemp 30
 
 void setup() {
 	pinMode(gasEmpty, INPUT);
@@ -64,15 +68,18 @@ void setup() {
 	pinMode(contact, OUTPUT);
 	pinMode(startEngine, OUTPUT);
 	pinMode(errorLED, OUTPUT);
+  pinMode(outputErrorLED, OUTPUT);
+  pinMode(startErrorLED, OUTPUT);
 	pinMode(gasEmptyLED, OUTPUT);
+  pinMode(oilLevelLED, OUTPUT);
+  pinMode(airErrorLED, OUTPUT);
 	pinMode(airMotorClose, OUTPUT);
 	pinMode(airMotorOpen, OUTPUT);
   pinMode(readyLED, OUTPUT);
-	currState = 1; //Stores current state.
+	currState = 2; //Stores current state.
+  check();
   openAir();
   closeAir();
-  check();
-  digitalWrite(readyLED, HIGH);
 } 
 
 
@@ -82,53 +89,96 @@ void loop() {
     	idle();
     	break;
     case 3:
-    	ignite();
+    	start();
     	break;
     case 4:
     	working();
     	break;
-    case 5:
-    	stop();
-    	break;
+//    case 5:
+//    	stop();
+//    	break;
   }
 }
 
 void check () {
-  if (digitalRead(gasEmpty) == HIGH && digitalRead(oilLevel) == HIGH) {
+  if (digitalRead(gasEmpty) == HIGH || digitalRead(oilLevel) == HIGH) { //TODO checkOutput function
+    error();
+  }
+  if (currState == WORKING && digitalRead(voltDetector) == LOW) {
+    outputError = true;
     error();
   }
 }
 
 void idle () {
+  digitalWrite(readyLED, HIGH);
   while (digitalRead(startBtn) == LOW) {
     //wait
   }
-  currState = IGNITE;
+  currState = START;
 }
 
-void ignite () {
+void start () {
+  digitalWrite(readyLED, LOW);
+  
+  int attempts = 0;
 
+  while (digitalRead(voltDetector) == LOW) {
+    ignite();
+    attempts++;
+    if (attempts > igniteAttempts) {
+      startError = true;
+      error();
+    }
+  }
+
+  delay(1000);
+  digitalWrite(contactor, HIGH);
+  
   currState = WORKING;
 } 
+
+void ignite () {
+  if (getTemp() < airTemp) {
+    openAir();
+  }
+  digitalWrite(contact, HIGH);
+    delay(100);
+    digitalWrite(startEngine, HIGH);
+    delay(1000); //TODO check time
+    digitalWrite(startEngine, LOW);
+    delay(1000); //TODO check time
+    closeAir();
+}
 
 void working () {
   while (digitalRead(stopBtn) == LOW) {
     check();
   }
+  stop();
 }
 
 void stop () {
-
-   currState = IDLE;
+  digitalWrite(contactor, LOW);
+  delay(100); //TODO set this time correctly
+  digitalWrite(contact, LOW);
+  currState = IDLE;
 }
 
 void error () {
+  stop();
 	digitalWrite(errorLED, HIGH);
 	digitalWrite(gasEmptyLED, digitalRead(gasEmpty));
 	digitalWrite(oilLevelLED, digitalRead(oilLevel));
 	if (airError) {
 		digitalWrite(airErrorLED, HIGH);
 	}
+  if (outputError) {
+    digitalWrite(outputErrorLED, HIGH);
+  }
+  if (startError) {
+    digitalWrite(startErrorLED, HIGH);
+  }
 	exit(0);
 }
 
@@ -144,7 +194,7 @@ void closeAir () {
   }
 }
 
-void openAir (){
+void openAir () {
   unsigned long ct = millis();
   while (digitalRead(airOpened) == LOW && millis() < ct + airTimeout) {
     digitalWrite(A3, HIGH);
@@ -154,4 +204,10 @@ void openAir (){
     airError = true;
     error();
   }
+}
+
+float getTemp () {
+  int tempVal = analogRead(temp);
+  float mv = (tempVal / 1024.0) * 5000;
+  return mv / 10;
 }
